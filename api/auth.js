@@ -16,16 +16,16 @@ router.get('/user', async (req, res) => {
 // Register user
 
 router.post('/register', async (req, res) => {
-    console.log(req.body);
     const { username, password } = req.body;
     User.findOne({ username: username }, async (err, doc) => {
         if (err) console.log(err);
-        if (doc) res.send('User exists!');
+        if (doc) res.send('User exists! Please choose a different username.');
         // handle error etc etc
         else {
             const user = new User({
                 username,
                 password: await bcrypt.hash(password, await bcrypt.genSalt(10)),
+                events: []
             });
             await user.save();
             res.send('User saved to DB');
@@ -55,7 +55,6 @@ router.post('/login', async (req, res, next) => {
 
 router.get('/logout', function (req, res) {
     req.logout();
-    // res.redirect('/');
     res.send('Logged out')
 });
 

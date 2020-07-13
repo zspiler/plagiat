@@ -12,12 +12,10 @@ export default function Register() {
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-
         try {
             const res = await axios.post(
                 '/api/auth/register',
                 { username, password }
-
             );
         } catch (err) {
             const errors = err.response.data.errors;
@@ -45,7 +43,7 @@ export default function Register() {
                     <label>Username</label>
 
                     <input
-                        type="username"
+                        type="text"
                         className="form-control"
                         name="username"
                         placeholder="Enter username"

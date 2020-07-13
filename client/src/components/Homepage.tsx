@@ -47,7 +47,7 @@ export default function Homepage({ }: Props): ReactElement {
                     </ul>
                 </div>
             </nav>
-            <div className="submissions-container">
+            <div className="center-container">
                 <h4>Events</h4>
                 <Link to="/new-event">
                     <button type="button" className="btn btn-dark">

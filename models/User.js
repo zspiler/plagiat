@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-var UserSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
     username: {
         type: String,
         required: true
@@ -9,7 +9,19 @@ var UserSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
-    }
+    },
+    events: {
+        type: Array,
+        required: true
+    },
+    events: [
+        {
+            event: {
+                type: Schema.Types.ObjectId,
+                ref: 'events'
+            }
+        }
+    ],
 });
 
 User = mongoose.model('user', UserSchema);

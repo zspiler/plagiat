@@ -1,9 +1,7 @@
 import React, { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 
-interface Props { }
-
-export default function Landingpage({ }: Props): ReactElement {
+export default function Landingpage(): ReactElement {
     return (
         <div className="App">
             <header className="App-header">
@@ -14,7 +12,8 @@ export default function Landingpage({ }: Props): ReactElement {
                             Log In
                         </button>
                     </Link>
-
+                </div>
+                <div className="btn-group-vertical">
                     <Link to="/register">
                         <button type="button" className="btn btn-dark">
                             Register

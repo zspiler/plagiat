@@ -12,17 +12,8 @@ interface ServerResponse {
 }
 
 export default function Login() {
-    const [formData, setFormData] = useState({
-        username: '',
-        password: '',
-    });
-
+    const [formData, setFormData] = useState({ username: '', password: '', });
     const [auth, setAuth] = useState({ username: "", loaded: false })
-
-    // const config = {
-    //     headers: { 'Content-Type': 'application/json' },
-    //     withCredentials: true,
-    // };
 
     const getUser = async () => {
         try {
@@ -80,7 +71,7 @@ export default function Login() {
                     <label>Username</label>
 
                     <input
-                        type="username"
+                        type="text"
                         className="form-control"
                         name="username"
                         placeholder="Enter username"
