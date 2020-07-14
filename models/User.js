@@ -10,16 +10,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    events: {
-        type: Array,
-        required: true
-    },
     events: [
         {
-            event: {
-                type: Schema.Types.ObjectId,
-                ref: 'events'
-            }
+            type: Schema.Types.ObjectId,
+            ref: 'event'
         }
     ],
 });

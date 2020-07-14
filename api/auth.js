@@ -28,7 +28,14 @@ router.post('/register', async (req, res) => {
                 events: []
             });
             await user.save();
-            res.send('User saved to DB');
+
+            req.logIn(user, (err) => {
+                if (err) {
+                    console.log(`Login error: ${err}`);
+                    throw err;
+                }
+                res.send('User created!');
+            });
         }
     });
 });

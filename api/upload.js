@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-
+const fs = require('fs')
+const Moss = require('../moss.js')
 
 const authenticate = (req, res, next) => {
     if (req.isAuthenticated()) {
@@ -14,33 +15,64 @@ const authenticate = (req, res, next) => {
 // POST api/upload 
 // Upload files 
 
-router.post('/', authenticate, async (req, res) => {
-    const files = req.files; //obj obj
+// POST api/upload/:eventId
+// Create directory and upload 
+
+router.post('/:eventID', authenticate, async (req, res) => {
+
+    const files = req.files;
     if (!files) return res.status(500).send({ msg: "Files not found" })
 
     const root = __dirname.split('/').slice(0, -1).join('/')
+    const filesDir = `${root}/uploads/${req.params.eventID}/files`
+    const baseFilesDir = `${root}/uploads/${req.params.eventID}/basefiles`
+    if (!fs.existsSync(filesDir)) fs.mkdirSync(filesDir, { recursive: true });
+    if (!fs.existsSync(baseFilesDir)) fs.mkdirSync(baseFilesDir, { recursive: true });
 
     for (var key in req.files) {
         const file = req.files[key]
-
-        var path = `${root}/uploads/username/eventid/files/${file.name}`
-        if (key.indexOf('base') == 0) path = `${root}/uploads/username/eventid/basefiles/${file.name}`
-
-        file.mv(path, function (err) {
-            // file.mv(`${root}/uploads/${req.user.username}/${myFile.name}`, function (err) {
-            if (err) {
-                console.log(err)
-                return res.status(500).send({ msg: "Error occured" });
-            }
-            console.log(`Uploaded ${file.name}!`);
-        });
-
+        var dir = (key.indexOf('base') == 0 ? baseFilesDir : filesDir)
+        await file.mv(`${dir}/${file.name}`);
     }
-    return res.send('Succcess')
+
+    moss = new Moss(113025430, 'python');
+
+    fs.readdirSync(filesDir).forEach(function (file) {
+        moss.addFile(`${filesDir}/${file}`);
+    });
+
+    fs.readdirSync(baseFilesDir).forEach(function (file) {
+        moss.addBaseFile(`${filesDir}/${file}`);
+    });
+
+    // ASYNC
+
+    // fs.readdir(filesDir + '/', function (err, files) {
+    //     if (err) {
+    //         console.log('Unable to scan directory');
+    //         return
+    //     }
+    //     files.forEach(function (file) {
+    //         let path = `${filesDir}/${file}`
+    //         moss.addFile(path);
+    //     });
+    // });
+
+    // // add base-files
+    // fs.readdir(baseFilesDir, function (err, files) {
+    //     if (err) {
+    //         console.log('Unable to scan directory');
+    //         return
+    //     }
+    //     files.forEach(function (file) {
+    //         let path = `${baseFilesDir}/${file}`
+    //         moss.addBaseFile(path);
+    //     });
+    // });
+
+    url = moss.submit();
+    return res.send(moss.parseResult(url))
 });
 
 
 module.exports = router;
-
-// 1. choose files and base files 2. print out files and base files 3. submit form & upload files
-// before submitting check if any files have been added..

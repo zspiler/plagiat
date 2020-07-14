@@ -1,14 +1,25 @@
 import React, { useState, useEffect, ReactElement } from 'react';
-import axios from 'axios'
 import { Redirect } from 'react-router-dom';
-
 import { ProgressBar } from 'react-bootstrap'
+
 import Navbar from './layout/Navbar'
+
+import axios from 'axios'
+
 
 export default function CreateEvent(): ReactElement {
 
     const [auth, setAuth] = useState({ username: "", loaded: false })
-    const [formData, setFormData] = useState({ title: '', description: '', });
+    const [formData, setFormData] = useState({ title: '', description: '', language: 'c' });
+    const [processing, setProcessing] = useState(false)
+    const [uploading, setUploading] = useState(false)
+    const [files, setFiles] = useState([] as any)
+    const [baseFiles, setBaseFiles] = useState([] as any)
+    const [progress, setProgess] = useState(0);
+
+    const { title, description, language } = formData;
+
+    const el = React.useRef<HTMLInputElement>(null);
 
     const getUser = async () => {
         try {
@@ -25,19 +36,46 @@ export default function CreateEvent(): ReactElement {
         getUser();
     }, []);
 
+
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (files.length + baseFiles.length === 0) { console.log('No files selected!'); return }
-        uploadFiles();
+
+        let eventID = (await axios.post('http://localhost:5000/api/events', formData)).data
+
+        // Upload files
+
+        const fd = new FormData();
+
+        for (let i = 0; i < baseFiles.length; i++) {
+            fd.append(`basefile ${i}`, baseFiles[i]);
+        }
+        for (let i = 0; i < files.length; i++) {
+            fd.append(`file ${i}`, files[i]);
+        }
+
+        setUploading(true)
+        let res = await axios.post(`http://localhost:5000/api/upload/${eventID}`, fd, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+            onUploadProgress: (progressEvent) => {
+                var pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                setProgess(pct);
+            }
+        })
+        setUploading(false)
+
+        console.log(`Moss response: ${JSON.stringify(res)}`);
     };
 
-    const onChange = async (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
+    const onChange = async (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement> |
+        React.ChangeEvent<HTMLSelectElement>) => {
         e.preventDefault();
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-
-    const addFiles = (e: any) => { // TODO: fix type
+    const addFiles = (e: any) => {
         let arr: File[] = []
         for (var i = 0; i < e.target.files.length; i++) {
             arr.push(e.target.files[i])
@@ -53,70 +91,6 @@ export default function CreateEvent(): ReactElement {
         setBaseFiles(baseFiles.concat(arr))
     }
 
-    const { title, description } = formData;
-
-    const [files, setFiles] = useState([] as any)
-    const [baseFiles, setBaseFiles] = useState([] as any)
-    const [progress, setProgess] = useState(0); // progess bar
-
-    const el = React.useRef<HTMLInputElement>(null);
-
-    const uploadFiles = () => {
-        const formData = new FormData();
-
-        let i = 0
-        baseFiles.forEach((f: string | Blob) => {
-            formData.append(`basefile ${i}`, f);
-            i += 1
-        });
-
-        i = 0
-        files.forEach((f: string | Blob) => {
-            formData.append(`file ${i}`, f);
-            i += 1
-        });
-
-        axios.post('http://localhost:5000/api/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            },
-            onUploadProgress: (progressEvent) => {
-                var pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-                setProgess(pct);
-            }
-
-        }).then(res => {
-            console.log(res);
-        }).catch(err => console.log(err))
-    }
-
-    const languages = [
-        'c',
-        'cc',
-        'java',
-        'ml',
-        'pascal',
-        'ada',
-        'lisp',
-        'scheme',
-        'haskell',
-        'fortran',
-        'ascii',
-        'vhdl',
-        'verilog',
-        'perl',
-        'matlab',
-        'python',
-        'mips',
-        'prolog',
-        'spice',
-        'vb',
-        'csharp',
-        'modula2',
-        'a8086',
-        'javascript',
-        'plsql',
-    ];
 
     if (auth.loaded && !auth.username) {
         return <Redirect to="/" />;
@@ -128,6 +102,8 @@ export default function CreateEvent(): ReactElement {
 
             <div className="parent">
                 <div className="div1">
+                    <h2>Create event</h2>
+
                     <form onSubmit={(e) => onSubmit(e)}>
                         <div className="form-group">
                             <label>Title</label>
@@ -153,15 +129,36 @@ export default function CreateEvent(): ReactElement {
 
                         <div className="form-group">
                             <label>Language</label>
-                            <select className="form-control" id="exampleFormControlSelect1">
-                                {languages.map((value: string, index: number) => {
-                                    return <option key={index}>{value}</option>
-                                })}
+                            <select className="form-control" name="language" value={language} onChange={(e) => onChange(e)}>
+                                <option value="c">c</option>
+                                <option value="cc">cc</option>
+                                <option value="java">java</option>
+                                <option value="ml">ml</option>
+                                <option value="pascal">pascal</option>
+                                <option value="ada">ada</option>
+                                <option value="lisp">lisp</option>
+                                <option value="scheme">scheme</option>
+                                <option value="haskell">haskell</option>
+                                <option value="fortran">fortran</option>
+                                <option value="ascii">ascii</option>
+                                <option value="vhdl">vhdl</option>
+                                <option value="verilog">verilog</option>
+                                <option value="perl">perl</option>
+                                <option value="matlab">matlab</option>
+                                <option value="python">python</option>
+                                <option value="mips">mips</option>
+                                <option value="prolog">prolog</option>
+                                <option value="spice">spice</option>
+                                <option value="vb">vb</option>
+                                <option value="csharp">csharp</option>
+                                <option value="modula2">modula2</option>
+                                <option value="a8086">a8086</option>
+                                <option value="javascript">javascript</option>
+                                <option value="plsql">plsql</option>
                             </select>
                         </div>
 
-                        <div className="center-container">
-
+                        <div className="button-labels">
                             <label className="btn btn-outline-info">
                                 Add files <input type="file" ref={el} onChange={addFiles} hidden multiple />
                             </label>
@@ -170,9 +167,10 @@ export default function CreateEvent(): ReactElement {
                                 Add base-files <input type="file" ref={el} onChange={addBaseFiles} hidden multiple />
                             </label>
 
-                            <button type="submit" className="btn btn-outline-danger">
-                                Submit
-                        </button>
+                            <label className='btn btn-outline-danger'>
+                                Submit <input type="submit" hidden />
+                            </label>
+
                         </div>
                     </form>
                 </div>
@@ -203,22 +201,18 @@ export default function CreateEvent(): ReactElement {
                                 </ul>
                             </div>
                         }
-                    </div> </div>
-            </div>
-
-            <div>
-                <div className="file-upload">
-                    {/* <ProgressBar variant="danger" now={progress} /> */}
+                    </div>
                 </div>
+
+                {/* states: uploading, processing */}
+
+                {uploading &&
+                    <div className="div4">
+                        <h5>uploading files...</h5>
+                        <ProgressBar variant="info" now={progress} />
+                    </div>
+                }
             </div>
-
         </div>
-
-
-
     )
 }
-
-
-// 1. choose files and base files 2. print out files and base files 3. submit form & upload files
-// before submitting check if any files have been added..

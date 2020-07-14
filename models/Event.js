@@ -10,28 +10,24 @@ const EventSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    events: {
-        type: Array,
-        required: true
-    },
-    files: [
-        {
-            file: {
-                type: String
-            }
-        }
-    ],
-    baseFiles: [
-        {
-            file: {
-                type: String
-            }
-        }
-    ],
     language: {
         type: String,
         required: true
     },
+    files: [
+        {
+            path: {
+                type: String
+            }
+        },
+    ],
+    baseFiles: [
+        {
+            path: {
+                type: String
+            }
+        }
+    ],
     results: {
         type: Object,
         required: false
@@ -39,4 +35,4 @@ const EventSchema = new mongoose.Schema({
 });
 
 Event = mongoose.model('event', EventSchema);
-module.exports = User;
+module.exports = Event;

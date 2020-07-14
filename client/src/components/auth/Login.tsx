@@ -3,9 +3,6 @@ import { Link, Redirect } from 'react-router-dom';
 import axios from 'axios';
 
 
-interface ServerData {
-    username: string;
-}
 
 export default function Login() {
     const [formData, setFormData] = useState({ username: '', password: '', });

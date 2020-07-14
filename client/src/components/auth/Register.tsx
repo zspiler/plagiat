@@ -1,22 +1,25 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, Redirect } from 'react-router-dom';
 import axios from 'axios';
 
 export default function Register() {
-    const [formData, setFormData] = useState({
-        username: '',
-        password: '',
-        password2: '',
-    });
+
+    const [formData, setFormData] = useState({ username: '', password: '', password2: '', });
+    const [auth, setAuth] = useState({ username: "", loaded: false })
+
+    useEffect(() => {
+        getUser();
+    }, []);
 
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
             const res = await axios.post(
-                '/api/auth/register',
+                'http://localhost:5000/api/auth/register',
                 { username, password }
             );
+            getUser()
         } catch (err) {
             const errors = err.response.data.errors;
             if (errors) {
@@ -27,12 +30,30 @@ export default function Register() {
         console.log('submit');
     };
 
+    const getUser = async () => {
+        try {
+            const user = await axios.get(
+                'http://localhost:5000/api/auth/user'
+            );
+            setAuth({ username: JSON.stringify(user.data), loaded: true })
+        }
+        catch (error) {
+            console.log(error);
+            setAuth({ username: "", loaded: true })
+        }
+    };
+
+
     const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         e.preventDefault();
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const { username, password, password2 } = formData;
+
+    if (auth.loaded && auth.username) {
+        return <Redirect to="/home" />;
+    }
 
     return (
         <div className="form-container">
