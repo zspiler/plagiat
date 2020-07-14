@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ReactElement } from 'react';
 import axios from 'axios'
-import { Link, Redirect } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 
 import { ProgressBar } from 'react-bootstrap'
 import Navbar from './layout/Navbar'
@@ -13,7 +13,7 @@ export default function CreateEvent(): ReactElement {
     const getUser = async () => {
         try {
             const user = await axios.get('http://localhost:5000/api/auth/user');
-            setAuth({ username: JSON.stringify(user.data), loaded: true })
+            setAuth({ username: user.data, loaded: true })
         }
         catch (error) {
             console.log(error);
@@ -27,7 +27,7 @@ export default function CreateEvent(): ReactElement {
 
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (files.length + baseFiles.length == 0) { console.log('No files selected!'); return }
+        if (files.length + baseFiles.length === 0) { console.log('No files selected!'); return }
         uploadFiles();
     };
 
@@ -36,24 +36,27 @@ export default function CreateEvent(): ReactElement {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const addFile = (e: any) => { // TODO: fix type
-        // setProgess(0)
-        const file = e.target.files[0]; // accesing file
-        setFiles([...files, file]); // storing file
+
+    const addFiles = (e: any) => { // TODO: fix type
+        let arr: File[] = []
+        for (var i = 0; i < e.target.files.length; i++) {
+            arr.push(e.target.files[i])
+        }
+        setFiles(files.concat(arr))
     }
 
-    const addBaseFile = (e: any) => { // TODO: fix type
-        // setProgess(0)
-        const file = e.target.files[0]; // accesing file
-        setBaseFiles([...baseFiles, file]); // storing file
+    const addBaseFiles = (e: any) => {
+        let arr: File[] = []
+        for (var i = 0; i < e.target.files.length; i++) {
+            arr.push(e.target.files[i])
+        }
+        setBaseFiles(baseFiles.concat(arr))
     }
 
     const { title, description } = formData;
 
     const [files, setFiles] = useState([] as any)
     const [baseFiles, setBaseFiles] = useState([] as any)
-
-    const [data, getFile] = useState({ name: "", path: "" });
     const [progress, setProgess] = useState(0); // progess bar
 
     const el = React.useRef<HTMLInputElement>(null);
@@ -121,58 +124,63 @@ export default function CreateEvent(): ReactElement {
 
     return (
         <div>
-            <Navbar />
-            <div className="center-container">
-                <h4>Create new event</h4>
-                <form onSubmit={(e) => onSubmit(e)}>
-                    <div className="form-group">
-                        <label>Title</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            name="title"
-                            placeholder="Enter title"
-                            value={title}
-                            onChange={(e) => onChange(e)}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Description</label>
-                        <textarea
-                            className="form-control"
-                            name="description"
-                            placeholder="Enter description"
-                            value={description}
-                            onChange={(e) => onChange(e)}
-                        />
-                    </div>
+            <Navbar username={auth.username} />
 
-                    <div className="form-group">
-                        <label>Language</label>
-                        <select className="form-control" id="exampleFormControlSelect1">
-                            {languages.map((value: string, index: number) => {
-                                return <option key={index}>{value}</option>
-                            })}
-                        </select>
-                    </div>
+            <div className="parent">
+                <div className="div1">
+                    <form onSubmit={(e) => onSubmit(e)}>
+                        <div className="form-group">
+                            <label>Title</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                name="title"
+                                placeholder="Enter title"
+                                value={title}
+                                onChange={(e) => onChange(e)}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Description</label>
+                            <textarea
+                                className="form-control"
+                                name="description"
+                                placeholder="Enter description"
+                                value={description}
+                                onChange={(e) => onChange(e)}
+                            />
+                        </div>
 
-                    <div className="center-container">
-                        <label className="btn btn-outline-info">
-                            Add file <input type="file" ref={el} onChange={addFile} hidden />
-                        </label>
+                        <div className="form-group">
+                            <label>Language</label>
+                            <select className="form-control" id="exampleFormControlSelect1">
+                                {languages.map((value: string, index: number) => {
+                                    return <option key={index}>{value}</option>
+                                })}
+                            </select>
+                        </div>
 
-                        <label className="btn btn-outline-info">
-                            Add base-file <input type="file" ref={el} onChange={addBaseFile} hidden />
-                        </label>
+                        <div className="center-container">
 
-                        <button type="submit" className="btn btn-outline-danger">
-                            Submit
+                            <label className="btn btn-outline-info">
+                                Add files <input type="file" ref={el} onChange={addFiles} hidden multiple />
+                            </label>
+
+                            <label className="btn btn-outline-info">
+                                Add base-files <input type="file" ref={el} onChange={addBaseFiles} hidden multiple />
+                            </label>
+
+                            <button type="submit" className="btn btn-outline-danger">
+                                Submit
                         </button>
-
-                        {files.length > 0 &&
+                        </div>
+                    </form>
+                </div>
+                <div className="div2">
+                    <div className="files">
+                        {files.length + baseFiles.length > 0 &&
                             <div>
-                                <h4>selected files</h4>
-
+                                <h5>selected files</h5>
                                 <ul className="list-group">
                                     {files.map((value: any, index: number) => {
                                         return <li key={index}>{value.name}</li>
@@ -181,9 +189,13 @@ export default function CreateEvent(): ReactElement {
                             </div>
                         }
 
-                        {baseFiles.length > 0 &&
+                    </div>
+                </div>
+                <div className="div3">
+                    <div className="base-files">
+                        {files.length + baseFiles.length > 0 &&
                             <div>
-                                <h4>selected base-files</h4>
+                                <h5>selected base-files</h5>
                                 <ul className="list-group">
                                     {baseFiles.map((value: any, index: number) => {
                                         return <li key={index}>{value.name}</li>
@@ -191,21 +203,18 @@ export default function CreateEvent(): ReactElement {
                                 </ul>
                             </div>
                         }
-                    </div>
-                </form>
-
+                    </div> </div>
             </div>
-
-            <p>{auth.username}</p>
 
             <div>
                 <div className="file-upload">
-
                     {/* <ProgressBar variant="danger" now={progress} /> */}
                 </div>
             </div>
 
         </div>
+
+
 
     )
 }

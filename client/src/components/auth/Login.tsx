@@ -7,10 +7,6 @@ interface ServerData {
     username: string;
 }
 
-interface ServerResponse {
-    data: ServerData;
-}
-
 export default function Login() {
     const [formData, setFormData] = useState({ username: '', password: '', });
     const [auth, setAuth] = useState({ username: "", loaded: false })
