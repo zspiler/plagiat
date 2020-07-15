@@ -8,6 +8,7 @@ const passport = require('passport');
 // Get user
 
 router.get('/user', async (req, res) => {
+    console.log(`/user!`);
     if (req.user) res.send(req.user.username)
     else res.status(401).json('Unauthorized');
 });

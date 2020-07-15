@@ -6,10 +6,10 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
 
-const configurePassport = require('./configurePassport');
+const configurePassport = require('./utils/configurePassport');
 
 // Connect to database
-require('./db')();
+require('./utils/db')();
 
 const app = express();
 const port = process.env.PORT || 5000

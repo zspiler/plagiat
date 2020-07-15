@@ -23,7 +23,9 @@ export default function CreateEvent(): ReactElement {
 
     const getUser = async () => {
         try {
+            console.log(`getting user.`);
             const user = await axios.get('http://localhost:5000/api/auth/user');
+            console.log(`got user: (username: ${user.data}) setting loaded to true`);
             setAuth({ username: user.data, loaded: true })
         }
         catch (error) {
@@ -39,6 +41,7 @@ export default function CreateEvent(): ReactElement {
 
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
         if (files.length + baseFiles.length === 0) { console.log('No files selected!'); return }
 
         let eventID = (await axios.post('http://localhost:5000/api/events', formData)).data
@@ -158,20 +161,21 @@ export default function CreateEvent(): ReactElement {
                             </select>
                         </div>
 
-                        <div className="button-labels">
-                            <label className="btn btn-outline-info">
+                        <div className={`button-labels` + (uploading || processing ? ` fadeOut` : ``)} >
+                            <label className={`btn btn-outline-info` + (uploading || processing ? ` fadeOut` : ``)}>
                                 Add files <input type="file" ref={el} onChange={addFiles} hidden multiple />
                             </label>
 
-                            <label className="btn btn-outline-info">
+                            <label className={`btn btn-outline-info` + (uploading || processing ? ` fadeOut` : ``)}>
                                 Add base-files <input type="file" ref={el} onChange={addBaseFiles} hidden multiple />
                             </label>
 
-                            <label className='btn btn-outline-danger'>
-                                Submit <input type="submit" hidden />
+                            <label className={`btn btn-outline-danger` + (uploading || processing ? ` fadeOut` : ``)}>
+                                Submit
+                                <input type="submit" hidden />
                             </label>
-
                         </div>
+
                     </form>
                 </div>
                 <div className="div2">

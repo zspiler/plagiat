@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Redirect } from 'react-router-dom';
 import axios from 'axios';
+import { loadavg } from 'os';
 
 
 
@@ -10,9 +11,9 @@ export default function Login() {
 
     const getUser = async () => {
         try {
+
             const user = await axios.get(
                 'http://localhost:5000/api/auth/user'
-
             );
             setAuth({ username: JSON.stringify(user.data), loaded: true })
         }
@@ -34,7 +35,6 @@ export default function Login() {
             const res = await axios.post(
                 'http://localhost:5000/api/auth/login',
                 { username, password }
-
             );
             // console.log(`/login response: ${JSON.stringify(res.config.data)}`);
             getUser()

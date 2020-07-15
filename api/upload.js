@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-const fs = require('fs')
-const Moss = require('../moss.js')
+const fs = require('fs-extra')
+const MossClient = require('moss-node-client')
+const parseResult = require('../utils/parseResult')
 
 const authenticate = (req, res, next) => {
     if (req.isAuthenticated()) {
@@ -12,20 +13,18 @@ const authenticate = (req, res, next) => {
     }
 }
 
-// POST api/upload 
-// Upload files 
-
 // POST api/upload/:eventId
-// Create directory and upload 
+// Upload files, submit to Moss, send back parsed results
 
 router.post('/:eventID', authenticate, async (req, res) => {
 
     const files = req.files;
     if (!files) return res.status(500).send({ msg: "Files not found" })
 
-    const root = __dirname.split('/').slice(0, -1).join('/')
-    const filesDir = `${root}/uploads/${req.params.eventID}/files`
-    const baseFilesDir = `${root}/uploads/${req.params.eventID}/basefiles`
+    const eventDir = `${__dirname.split('/').slice(0, -1).join('/')}/uploads/${req.params.eventID}`
+    const filesDir = `${eventDir}/files`
+    const baseFilesDir = `${eventDir}/basefiles`
+
     if (!fs.existsSync(filesDir)) fs.mkdirSync(filesDir, { recursive: true });
     if (!fs.existsSync(baseFilesDir)) fs.mkdirSync(baseFilesDir, { recursive: true });
 
@@ -35,44 +34,27 @@ router.post('/:eventID', authenticate, async (req, res) => {
         await file.mv(`${dir}/${file.name}`);
     }
 
-    moss = new Moss(113025430, 'python');
+    const moss = new MossClient('python', "113025430") // TODO: pass lang        
 
     fs.readdirSync(filesDir).forEach(function (file) {
-        moss.addFile(`${filesDir}/${file}`);
+        moss.addFile(`${filesDir}/${file}`, file)
     });
 
     fs.readdirSync(baseFilesDir).forEach(function (file) {
-        moss.addBaseFile(`${filesDir}/${file}`);
+        moss.addFile(`${baseFilesDir}/${file}`, file)
     });
 
-    // ASYNC
+    moss.process().then(url => {
+        res.send(parseResult(url))
+        fs.remove(`${root}/uploads/${req.params.eventID}`, () => {
+            console.log(`Deleted ${req.params.eventID}`);
+            return
+        })
+    })
 
-    // fs.readdir(filesDir + '/', function (err, files) {
-    //     if (err) {
-    //         console.log('Unable to scan directory');
-    //         return
-    //     }
-    //     files.forEach(function (file) {
-    //         let path = `${filesDir}/${file}`
-    //         moss.addFile(path);
-    //     });
-    // });
-
-    // // add base-files
-    // fs.readdir(baseFilesDir, function (err, files) {
-    //     if (err) {
-    //         console.log('Unable to scan directory');
-    //         return
-    //     }
-    //     files.forEach(function (file) {
-    //         let path = `${baseFilesDir}/${file}`
-    //         moss.addBaseFile(path);
-    //     });
-    // });
-
-    url = moss.submit();
-    return res.send(moss.parseResult(url))
 });
+
+
 
 
 module.exports = router;
