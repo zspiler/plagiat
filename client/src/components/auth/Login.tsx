@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Redirect } from 'react-router-dom';
 import axios from 'axios';
-import { loadavg } from 'os';
-
 
 
 export default function Login() {
     const [formData, setFormData] = useState({ username: '', password: '', });
     const [auth, setAuth] = useState({ username: "", loaded: false })
+    const [processing, setProcessing] = useState(false)
 
     const getUser = async () => {
         try {
@@ -31,16 +30,18 @@ export default function Login() {
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        setProcessing(true)
         try {
             const res = await axios.post(
                 'http://localhost:5000/api/auth/login',
                 { username, password }
             );
-            // console.log(`/login response: ${JSON.stringify(res.config.data)}`);
             getUser()
         } catch (err) {
             console.log(err);
         }
+        setProcessing(false)
+
     };
 
     const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,9 +89,20 @@ export default function Login() {
                     Submit
                 </button>
             </form>
-            <p>
-                Don't have an account? <Link to="/register">Register</Link>
-            </p>
+            <div className="link">
+                <p>
+                    Don't have an account? <Link to="/register">Register</Link>
+                </p>
+            </div>
+            {processing &&
+                <div>
+                    <div className="spinner">
+                        <div className="bounce1"></div>
+                        <div className="bounce2"></div>
+                        <div className="bounce3"></div>
+                    </div>
+                </div>
+            }
 
             <p>{auth.username}</p>
         </div>

@@ -6,6 +6,7 @@ export default function Register() {
 
     const [formData, setFormData] = useState({ username: '', password: '', password2: '', });
     const [auth, setAuth] = useState({ username: "", loaded: false })
+    const [processing, setProcessing] = useState(false)
 
     useEffect(() => {
         getUser();
@@ -14,6 +15,7 @@ export default function Register() {
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        setProcessing(true)
         try {
             const res = await axios.post(
                 'http://localhost:5000/api/auth/register',
@@ -26,6 +28,7 @@ export default function Register() {
                 console.log(errors);
             }
         }
+        setProcessing(false)
 
         console.log('submit');
     };
@@ -100,9 +103,22 @@ export default function Register() {
                     Submit
                 </button>
             </form>
-            <p>
-                Already have an account? <Link to="/login">Log In</Link>
-            </p>
+
+            <div className="link">
+                <p>
+                    Already have an account? <Link to="/login">Log In</Link>
+                </p>
+            </div>
+
+            {processing &&
+                <div>
+                    <div className="spinner">
+                        <div className="bounce1"></div>
+                        <div className="bounce2"></div>
+                        <div className="bounce3"></div>
+                    </div>
+                </div>
+            }
         </div>
     );
 }

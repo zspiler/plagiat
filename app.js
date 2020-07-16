@@ -34,6 +34,5 @@ app.use(fileUpload());
 
 app.get('/', (req, res) => res.send('Hello World!'));
 app.use('/api/auth', require('./api/auth'));
-app.use('/api/upload', require('./api/upload'));
-app.use('/api/events', require('./api/events'));
+app.use('/api/tests', require('./api/tests'));
 

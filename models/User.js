@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const UserSchema = new mongoose.Schema({
+const UserSchema = new Schema({
     username: {
         type: String,
         required: true
@@ -10,10 +10,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    events: [
+    tests: [
         {
             type: Schema.Types.ObjectId,
-            ref: 'event'
+            ref: 'test'
         }
     ],
 });

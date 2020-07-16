@@ -2,14 +2,19 @@ import React, { useState, useEffect, ReactElement } from 'react';
 import axios from 'axios'
 import { Link, Redirect } from 'react-router-dom';
 import Navbar from './layout/Navbar';
+import TestCard from './TestCard'
 
-interface Props {
 
-}
-
-export default function Homepage({ }: Props): ReactElement {
+export default function Homepage(): ReactElement {
 
     const [auth, setAuth] = useState({ username: "", loaded: false })
+    const [loading, setLoading] = useState(true)
+    const [tests, setTests] = useState([])
+
+    useEffect(() => {
+        getUser()
+        getTests();
+    }, []);
 
     const getUser = async () => {
         try {
@@ -21,10 +26,16 @@ export default function Homepage({ }: Props): ReactElement {
             setAuth({ username: "", loaded: true })
         }
     };
-
-    useEffect(() => {
-        getUser();
-    }, []);
+    const getTests = async () => {
+        try {
+            const tests = await axios.get('http://localhost:5000/api/tests/');
+            setTests(tests.data.reverse())
+        }
+        catch (error) {
+            console.log(error);
+        }
+        setLoading(false)
+    };
 
 
     if (auth.loaded && !auth.username) {
@@ -35,12 +46,28 @@ export default function Homepage({ }: Props): ReactElement {
         <div>
             <Navbar username={auth.username} />
             <div className="center-container">
-                <h4>Events</h4>
-                <Link to="/new-event">
+                <h4>Tests</h4>
+                <Link to="/new-test">
                     <button type="button" className="btn btn-dark">
-                        New event
-                </button>
+                        New test
+                    </button>
                 </Link>
+                {loading &&
+                    <div className="link">
+                        <div className="spinner">
+                            <div className="bounce1"></div>
+                            <div className="bounce2"></div>
+                            <div className="bounce3"></div>
+                        </div>
+                    </div>
+                }
+
+                {!loading &&
+                    tests.map((test: any) => {
+                        return <TestCard key={test._id} id={test._id} title={test.title} language={test.language} date={test.date} />
+                    })
+                }
+
             </div>
         </div>
     )

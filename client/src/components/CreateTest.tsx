@@ -10,7 +10,7 @@ import axios from 'axios'
 export default function CreateEvent(): ReactElement {
 
     const [auth, setAuth] = useState({ username: "", loaded: false })
-    const [formData, setFormData] = useState({ title: '', description: '', language: 'c' });
+    const [formData, setFormData] = useState({ title: '', description: '', language: 'c', date: new Date().toLocaleDateString(), files: [] as any, baseFiles: [] as any });
     const [processing, setProcessing] = useState(false)
     const [uploading, setUploading] = useState(false)
     const [files, setFiles] = useState([] as any)
@@ -23,9 +23,7 @@ export default function CreateEvent(): ReactElement {
 
     const getUser = async () => {
         try {
-            console.log(`getting user.`);
             const user = await axios.get('http://localhost:5000/api/auth/user');
-            console.log(`got user: (username: ${user.data}) setting loaded to true`);
             setAuth({ username: user.data, loaded: true })
         }
         catch (error) {
@@ -38,17 +36,25 @@ export default function CreateEvent(): ReactElement {
         getUser();
     }, []);
 
-
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (uploading || processing) return;
 
         if (files.length + baseFiles.length === 0) { console.log('No files selected!'); return }
 
-        let eventID = (await axios.post('http://localhost:5000/api/events', formData)).data
-
         // Upload files
 
+        for (const file of files) {
+            formData.files.push(file.name)
+        }
+
+
         const fd = new FormData();
+
+        formData.files = files.map((file: any) => file.name)
+        formData.baseFiles = baseFiles.map((file: any) => file.name)
+
+        fd.append('form', JSON.stringify(formData))
 
         for (let i = 0; i < baseFiles.length; i++) {
             fd.append(`basefile ${i}`, baseFiles[i]);
@@ -58,13 +64,18 @@ export default function CreateEvent(): ReactElement {
         }
 
         setUploading(true)
-        let res = await axios.post(`http://localhost:5000/api/upload/${eventID}`, fd, {
+        let res = await axios.post(`http://localhost:5000/api/tests/`, fd, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             },
             onUploadProgress: (progressEvent) => {
                 var pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                if (pct == 100) {
+                    setUploading(false)
+                    setProcessing(true)
+                }
                 setProgess(pct);
+
             }
         })
         setUploading(false)
@@ -75,7 +86,10 @@ export default function CreateEvent(): ReactElement {
     const onChange = async (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement> |
         React.ChangeEvent<HTMLSelectElement>) => {
         e.preventDefault();
+        if (uploading || processing) return;
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        console.log(`FORM DATA: ${JSON.stringify(formData)}`);
+
     };
 
     const addFiles = (e: any) => {
@@ -105,7 +119,7 @@ export default function CreateEvent(): ReactElement {
 
             <div className="parent">
                 <div className="div1">
-                    <h2>Create event</h2>
+                    <h2>Create test</h2>
 
                     <form onSubmit={(e) => onSubmit(e)}>
                         <div className="form-group">
@@ -162,15 +176,15 @@ export default function CreateEvent(): ReactElement {
                         </div>
 
                         <div className={`button-labels` + (uploading || processing ? ` fadeOut` : ``)} >
-                            <label className={`btn btn-outline-info` + (uploading || processing ? ` fadeOut` : ``)}>
+                            <label className={`btn btn-outline-info`}>
                                 Add files <input type="file" ref={el} onChange={addFiles} hidden multiple />
                             </label>
 
-                            <label className={`btn btn-outline-info` + (uploading || processing ? ` fadeOut` : ``)}>
+                            <label className={`btn btn-outline-info`}>
                                 Add base-files <input type="file" ref={el} onChange={addBaseFiles} hidden multiple />
                             </label>
 
-                            <label className={`btn btn-outline-danger` + (uploading || processing ? ` fadeOut` : ``)}>
+                            <label className={`btn btn-outline-danger`}>
                                 Submit
                                 <input type="submit" hidden />
                             </label>
@@ -181,7 +195,7 @@ export default function CreateEvent(): ReactElement {
                 <div className="div2">
                     <div className="files">
                         {files.length + baseFiles.length > 0 &&
-                            <div>
+                            <div className={(uploading || processing ? `fadeOut` : ``)}>
                                 <h5>selected files</h5>
                                 <ul className="list-group">
                                     {files.map((value: any, index: number) => {
@@ -196,7 +210,7 @@ export default function CreateEvent(): ReactElement {
                 <div className="div3">
                     <div className="base-files">
                         {files.length + baseFiles.length > 0 &&
-                            <div>
+                            <div className={(uploading || processing ? `fadeOut` : ``)}>
                                 <h5>selected base-files</h5>
                                 <ul className="list-group">
                                     {baseFiles.map((value: any, index: number) => {
@@ -208,12 +222,21 @@ export default function CreateEvent(): ReactElement {
                     </div>
                 </div>
 
-                {/* states: uploading, processing */}
 
                 {uploading &&
                     <div className="div4">
                         <h5>uploading files...</h5>
                         <ProgressBar variant="info" now={progress} />
+                    </div>
+                }
+                {processing &&
+
+                    <div className="div4">
+                        <div className="spinner">
+                            <div className="bounce1"></div>
+                            <div className="bounce2"></div>
+                            <div className="bounce3"></div>
+                        </div>
                     </div>
                 }
             </div>
