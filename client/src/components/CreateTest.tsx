@@ -11,15 +11,29 @@ export default function CreateEvent(): ReactElement {
 
     const [auth, setAuth] = useState({ username: "", loaded: false })
     const [formData, setFormData] = useState({ title: '', description: '', language: 'c', date: new Date().toLocaleDateString(), files: [] as any, baseFiles: [] as any });
+
     const [processing, setProcessing] = useState(false)
     const [uploading, setUploading] = useState(false)
+    const [progress, setProgess] = useState(0);
+    const [testID, setTestID] = useState("")
+
     const [files, setFiles] = useState([] as any)
     const [baseFiles, setBaseFiles] = useState([] as any)
-    const [progress, setProgess] = useState(0);
 
     const { title, description, language } = formData;
-
     const el = React.useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        getUser();
+    }, []);
+
+    const onChange = async (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement> |
+        React.ChangeEvent<HTMLSelectElement>) => {
+        e.preventDefault();
+        if (uploading || processing) return;
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
 
     const getUser = async () => {
         try {
@@ -32,9 +46,6 @@ export default function CreateEvent(): ReactElement {
         }
     };
 
-    useEffect(() => {
-        getUser();
-    }, []);
 
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -43,11 +54,9 @@ export default function CreateEvent(): ReactElement {
         if (files.length + baseFiles.length === 0) { console.log('No files selected!'); return }
 
         // Upload files
-
         for (const file of files) {
             formData.files.push(file.name)
         }
-
 
         const fd = new FormData();
 
@@ -78,23 +87,19 @@ export default function CreateEvent(): ReactElement {
 
             }
         })
-        setUploading(false)
-
+        setTestID(res.data)
         console.log(`Moss response: ${JSON.stringify(res)}`);
     };
 
-    const onChange = async (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement> |
-        React.ChangeEvent<HTMLSelectElement>) => {
-        e.preventDefault();
-        if (uploading || processing) return;
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-        console.log(`FORM DATA: ${JSON.stringify(formData)}`);
-
-    };
 
     const addFiles = (e: any) => {
         let arr: File[] = []
         for (var i = 0; i < e.target.files.length; i++) {
+            for (const file of files) {
+                if (file.name == e.target.files[i].name) { // TODO: display error
+                    return console.log('Please make sure all uploaded files have unique names.');
+                }
+            }
             arr.push(e.target.files[i])
         }
         setFiles(files.concat(arr))
@@ -108,19 +113,22 @@ export default function CreateEvent(): ReactElement {
         setBaseFiles(baseFiles.concat(arr))
     }
 
-
     if (auth.loaded && !auth.username) {
         return <Redirect to="/" />;
     }
 
+    if (testID != "") {
+        return <Redirect to={`/tests/${testID}`} />
+    }
+
     return (
         <div>
+
             <Navbar username={auth.username} />
 
             <div className="parent">
                 <div className="div1">
                     <h2>Create test</h2>
-
                     <form onSubmit={(e) => onSubmit(e)}>
                         <div className="form-group">
                             <label>Title</label>
@@ -133,6 +141,7 @@ export default function CreateEvent(): ReactElement {
                                 onChange={(e) => onChange(e)}
                             />
                         </div>
+
                         <div className="form-group">
                             <label>Description</label>
                             <textarea
@@ -192,6 +201,7 @@ export default function CreateEvent(): ReactElement {
 
                     </form>
                 </div>
+
                 <div className="div2">
                     <div className="files">
                         {files.length + baseFiles.length > 0 &&
@@ -199,14 +209,14 @@ export default function CreateEvent(): ReactElement {
                                 <h5>selected files</h5>
                                 <ul className="list-group">
                                     {files.map((value: any, index: number) => {
-                                        return <li key={index}>{value.name}</li>
+                                        return <li key={index} className="list-group-item">{value.name}</li>
                                     })}
                                 </ul>
                             </div>
                         }
-
                     </div>
                 </div>
+
                 <div className="div3">
                     <div className="base-files">
                         {files.length + baseFiles.length > 0 &&
@@ -214,14 +224,13 @@ export default function CreateEvent(): ReactElement {
                                 <h5>selected base-files</h5>
                                 <ul className="list-group">
                                     {baseFiles.map((value: any, index: number) => {
-                                        return <li key={index}>{value.name}</li>
+                                        return <li key={index} className="list-group-item">{value.name}</li>
                                     })}
                                 </ul>
                             </div>
                         }
                     </div>
                 </div>
-
 
                 {uploading &&
                     <div className="div4">
@@ -230,7 +239,6 @@ export default function CreateEvent(): ReactElement {
                     </div>
                 }
                 {processing &&
-
                     <div className="div4">
                         <div className="spinner">
                             <div className="bounce1"></div>

@@ -4698,7 +4698,8 @@ tbody.collapse.show {
 
 .card {
     margin-top: 10px;
-    width: 18rem;
+    /* width: 18rem; */
+    width: 50%;
     position: relative;
     display: -webkit-box;
     display: -ms-flexbox;
@@ -5493,7 +5494,7 @@ tbody.collapse.show {
     display: block;
     padding: 0.75rem 1.25rem;
     margin-bottom: -1px;
-    background-color: #fff;
+    background-color: rgb(35, 35, 35);
     border: 1px solid rgba(0, 0, 0, 0.125);
 }
 

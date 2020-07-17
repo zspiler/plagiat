@@ -1,6 +1,7 @@
 import React, { useState, useEffect, ReactElement } from 'react';
 import axios from 'axios'
 import { Link, Redirect } from 'react-router-dom';
+
 import Navbar from './layout/Navbar';
 import TestCard from './TestCard'
 
@@ -26,10 +27,11 @@ export default function Homepage(): ReactElement {
             setAuth({ username: "", loaded: true })
         }
     };
+
     const getTests = async () => {
         try {
-            const tests = await axios.get('http://localhost:5000/api/tests/');
-            setTests(tests.data.reverse())
+            const res = await axios.get('http://localhost:5000/api/tests/');
+            setTests(res.data.reverse())
         }
         catch (error) {
             console.log(error);
@@ -46,7 +48,7 @@ export default function Homepage(): ReactElement {
         <div>
             <Navbar username={auth.username} />
             <div className="center-container">
-                <h4>Tests</h4>
+                <h4>Your Tests</h4>
                 <Link to="/new-test">
                     <button type="button" className="btn btn-dark">
                         New test
@@ -64,7 +66,12 @@ export default function Homepage(): ReactElement {
 
                 {!loading &&
                     tests.map((test: any) => {
-                        return <TestCard key={test._id} id={test._id} title={test.title} language={test.language} date={test.date} />
+                        return <TestCard key={test._id}
+                            id={test._id}
+                            title={test.title}
+                            language={test.language}
+                            date={test.date}
+                        />
                     })
                 }
 

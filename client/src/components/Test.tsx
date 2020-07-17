@@ -1,8 +1,11 @@
 import React, { useState, useEffect, ReactElement } from 'react';
 import axios from 'axios'
 import { Link, Redirect } from 'react-router-dom';
+import { useHistory } from "react-router-dom";
+
 import Navbar from './layout/Navbar';
 
+import CytoscapeComponent from 'react-cytoscapejs';
 
 interface Result {
     file1: string,
@@ -17,13 +20,15 @@ interface Props {
     match: any
 }
 
-
 export default function Test({ match }: Props): ReactElement {
+    const history = useHistory()
 
     const [auth, setAuth] = useState({ username: "", loaded: false })
     const [loading, setLoading] = useState(true)
     const [test, setTest] = useState({} as any)
     const [results, setResults] = useState<Result[]>([])
+    const [elements, setElements] = useState<any[]>([])
+
 
     useEffect(() => {
         getUser()
@@ -32,7 +37,11 @@ export default function Test({ match }: Props): ReactElement {
 
     const getUser = async () => {
         try {
+            console.log(`loading user...`);
+
             const user = await axios.get('http://localhost:5000/api/auth/user');
+            console.log(`got user.`);
+
             setAuth({ username: user.data, loaded: true })
         }
         catch (error) {
@@ -41,13 +50,27 @@ export default function Test({ match }: Props): ReactElement {
         }
     };
 
+
     const getTest = async () => {
         try {
             const res = await axios.get(`http://localhost:5000/api/tests/${match.params.testID}`)
             setTest(res.data)
             setResults(res.data.results)
-            console.log(`test: ${JSON.stringify(res.data)}`);
 
+            let arr = []
+            for (var i = 0; i < res.data.files.length; i++) {
+                arr.push({ data: { id: res.data.files[i], label: res.data.files[i] }, css: { color: `rgb(240,240,240)` } });
+            }
+            for (var i = 0; i < res.data.results.length; i++) {
+                const pair = res.data.results[i]
+                const red = (255 * ((pair.file1Percentage + pair.file2Percentage) / 200))
+                arr.push({
+                    data: { source: pair.file1, target: pair.file2 }, style: {
+                        lineColor: `rgb(${red},0,0)`
+                    }
+                });
+            }
+            setElements(arr)
         }
         catch (error) {
             console.log(error);
@@ -55,6 +78,16 @@ export default function Test({ match }: Props): ReactElement {
 
         setLoading(false)
     };
+
+    const deleteTest = async () => {
+        try {
+            await axios.delete(`http://localhost:5000/api/tests/${match.params.testID}`);
+        }
+        catch (error) {
+            console.log(error);
+        }
+        history.push('/home')
+    }
 
 
     if (auth.loaded && !auth.username) {
@@ -64,7 +97,7 @@ export default function Test({ match }: Props): ReactElement {
     return (
         <div>
             <Navbar username={auth.username} />
-            {loading && ( // TODO: center 
+            {loading && (
                 <div className="link">
                     <div className="spinner">
                         <div className="bounce1"></div>
@@ -76,58 +109,79 @@ export default function Test({ match }: Props): ReactElement {
             {!loading &&
                 <div>
                     <div className="dark-background center-container">
-                        <h2>{test.title}</h2>
+                        <h3>{test.title}</h3>
                         <p>{test.description}</p>
+                        <button className="btn btn-outline-danger button-margin" onClick={() => {
+                            if (window.confirm('Are you sure you wish to delete this item?'))
+                                deleteTest()
+                        }}>
+                            Delete Test
+                        </button>
                     </div>
-                    <div className="parent">
-                        <div className="div1">
-                            <h5>Files</h5>
+                    <div className="parent-test">
+                        <div className="div1-test">
+                            <h4>Files</h4>
                             <ul className="list-group">
-                                <div className="overflow-auto">
-                                    {test.files.map((value: any, index: number) => {
-                                        return <li key={index}>{value}</li>
-                                    })}
-                                </div>
+                                {test.files.map((value: any, index: number) => {
+                                    return <li key={index} className="list-group-item">{value}</li>
+                                })}
                             </ul>
                         </div>
-                        <div className="div2">
-                            <h5>Base-files</h5>
-                            {test.baseFiles.map((value: any, index: number) => {
-                                return <li key={index}>{value}</li>
-                            })}
+                        <div className="div2-test">
+                            <h4>Base-files</h4>
+                            <ul className="list-group">
+                                {test.baseFiles.map((value: any, index: number) => {
+                                    return <li key={index} className="list-group-item">{value}</li>
+                                })}
+                            </ul>
                         </div>
-                        <div className="div3">
-                            <h4>Results</h4>
-                            {/* {results.map((value: any, index: number) => {
-                                return <li key={index}>{value}</li>
-                            })} */}
+                        <div className="div3-test">
+                            <h4 style={{ marginBottom: '5%' }}>Results</h4>
 
-                            <table className="table table-dark">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">#</th>
-                                        <th scope="col">File 1</th>
-                                        <th scope="col">File 1 %</th>
-                                        <th scope="col">File 2</th>
-                                        <th scope="col">File 2 %</th>
-                                        <th scope="col">Lines matched</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {results.map((result: Result, index: number) => {
-                                        return (<tr>
-                                            <th scope="row">{index}</th>
-                                            <td>{result.file1}</td>
-                                            <td>{result.file1Percentage}</td>
-                                            <td>{result.file2}</td>
-                                            <td>{result.file2Percentage}</td>
-                                            <td>{result.linesMatched}</td>
-                                        </tr>)
-                                    })}
-                                </tbody>
-                            </table>
+                            {results.length > 0 && (
+                                <table className="table table-dark">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">#</th>
+                                            <th scope="col">File 1</th>
+                                            <th scope="col">File 1 %</th>
+                                            <th scope="col">File 2</th>
+                                            <th scope="col">File 2 %</th>
+                                            <th scope="col">Lines matched</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {results.map((result: Result, index: number) => {
+                                            return (<tr key={index}>
+                                                <th scope="row">{index}</th>
+                                                <td>{result.file1}</td>
+                                                <td>{result.file1Percentage}</td>
+                                                <td>{result.file2}</td>
+                                                <td>{result.file2Percentage}</td>
+                                                <td>{result.linesMatched}</td>
+                                            </tr>)
+                                        })}
+                                    </tbody>
+                                </table>
+                            ) || (<h5 style={{ color: `rgb(64, 173, 65)` }}>No similarities found!</h5>)}
+
+
                         </div>
                     </div>
+
+                    {results.length > 0 &&
+                        <div className="graph-container">
+                            <CytoscapeComponent elements={elements} zoomingEnabled={false}
+                                style={{
+                                    width: window.innerWidth / 2, height: window.innerHeight / 2,
+                                    paddingLeft: 0,
+                                    paddingRight: 0,
+                                    marginLeft: 'auto',
+                                    marginRight: 'auto',
+                                    display: 'block',
+                                }} layout={{ name: 'circle' }} />
+                        </div>
+                    }
 
                 </div>
             }

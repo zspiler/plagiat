@@ -11,8 +11,10 @@ import Register from './components/auth/Register';
 import Login from './components/auth/Login';
 import Landingpage from './components/Landingpage';
 import Homepage from './components/Homepage';
+import About from './components/About'
 import CreateTest from './components/CreateTest';
 import Test from './components/Test';
+import NotFound from './components/NotFound';
 
 axios.defaults.headers = { 'Content-Type': 'application/json' }
 axios.defaults.withCredentials = true
@@ -25,11 +27,10 @@ export default function App() {
                 <Route exact path="/register" component={Register} />
                 <Route exact path="/login" component={Login} />
                 <Route exact path="/home" component={Homepage} />
+                <Route exact path="/about" component={About} />
                 <Route exact path="/new-test" component={CreateTest} />
                 <Route exact path="/tests/:testID" component={Test} />
-
-
-                {/* <Route component={NotFound} /> */}
+                <Route component={NotFound} />
             </Switch>
         </Router>
     );

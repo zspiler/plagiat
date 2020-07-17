@@ -3,7 +3,9 @@ const router = express.Router();
 const Test = require('../models/Test');
 const fs = require('fs-extra')
 const MossClient = require('moss-node-client')
-const parseResult = require('../utils/parseResult')
+const parseResult = require('../utils/parseResult');
+// const { default: Axios } = require('axios');
+
 
 const authenticate = (req, res, next) => {
     if (req.isAuthenticated()) {
@@ -13,17 +15,17 @@ const authenticate = (req, res, next) => {
     }
 }
 
+
 // GET api/tests
 // Get logged-in user's tests
 
 router.get('/', authenticate, async (req, res) => {
     const username = req.user.username
-    console.log(`/tests, username: ${username}`);
+
     User.findOne({ username: username }, async (err, user) => {
         if (err) console.log(err);
         if (user) {
             var tests = await Test.find().where('_id').in(user.tests).exec();
-            console.log(`sending ${tests}`);
             res.send(tests)
         }
     })
@@ -31,16 +33,33 @@ router.get('/', authenticate, async (req, res) => {
 
 
 // GET api/tests/:testID
-// Get a specific test (protected)
+// Get a test (protected)
 
 router.get('/:testID', authenticate, async (req, res) => {
     const testID = req.params.testID
     const user = await User.findOne({ username: req.user.username })
-
     if (!user.tests.includes(testID)) res.status(401).send('Unauthorized');
 
     const test = await Test.findById(testID).exec()
     res.send(test)
+})
+
+// DELETE api/tests/:testID
+// Delete a test (protected)
+
+router.delete('/:testID', authenticate, async (req, res) => {
+    console.log(`delete`);
+    const testID = req.params.testID
+    const user = await User.findOne({ username: req.user.username })
+    if (!user.tests.includes(testID)) res.status(401).send('Unauthorized');
+
+    console.log(`Deleting test with _id: ${testID}`);
+    Test.deleteOne({ _id: req.params.testID }, (err) => {
+        if (err) {
+            res.send('F')
+        }
+        res.send('Success!')
+    });
 })
 
 
@@ -103,7 +122,7 @@ router.post('/', authenticate, async (req, res) => {
         console.log(`test with results: ${JSON.stringify(test)}`);
         test.save()
 
-        res.send('Success!')
+        res.send(test._id)
         // Remove created files
         fs.remove(`${testDir}`, () => {
             return
