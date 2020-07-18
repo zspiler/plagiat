@@ -16,7 +16,7 @@ export default function About(): ReactElement {
     const getUser = async () => {
         try {
             const user = await axios.get('http://localhost:5000/api/auth/user');
-            setAuth({ username: user.data, loaded: true })
+            setAuth({ username: user.data.username, loaded: true })
         }
         catch (error) {
             console.log(error);
@@ -39,7 +39,7 @@ export default function About(): ReactElement {
                 similarity of programs. To date, the main application of Moss has been in detecting
                 plagiarism in programming classes. Since its development in 1994, Moss has been very
                 effective in this role. The algorithm behind moss is a significant improvement over other
-cheating detection algorithms (at least, over those known to us)."</p>
+                cheating detection algorithms (at least, over those known to us)."</p>
 
 
                 <h4>What is Moss not?</h4>
@@ -57,7 +57,7 @@ cheating detection algorithms (at least, over those known to us)."</p>
                 solely on the similarity scores. These scores are useful for judging the relative amount
                 of matching between different pairs of programs and for more easily seeing which pairs of
                 programs stick out with unusual amounts of matching. But the scores are certainly not a
-proof of plagiarism. Someone must still look at the code."</p>
+                proof of plagiarism. Someone must still look at the code."</p>
 
                 <p>Read more at: https://theory.stanford.edu/~aiken/moss/</p>
 
@@ -65,8 +65,7 @@ proof of plagiarism. Someone must still look at the code."</p>
 
                 <p> Get started by <Link to="/new-test">creating a new test</Link> and uploading some files you'd like to check. You can also supply 'base-files',
                 which contain code that will not be counted when checking for similarities.
-                When adding files, please make sure they all have unique names.
-                </p>
+                When adding files, please make sure they all have unique names.</p>
 
                 <h4>Reading the results</h4>
                 <p>From the official description:</p>

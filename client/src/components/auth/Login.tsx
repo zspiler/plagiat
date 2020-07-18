@@ -5,23 +5,14 @@ import axios from 'axios';
 
 export default function Login() {
     const [formData, setFormData] = useState({ username: '', password: '', });
+    const { username, password } = formData;
+
     const [auth, setAuth] = useState({ username: "", loaded: false })
+
     const [processing, setProcessing] = useState(false)
 
-    const getUser = async () => {
-        try {
-
-            const user = await axios.get(
-                'http://localhost:5000/api/auth/user'
-            );
-            setAuth({ username: JSON.stringify(user.data), loaded: true })
-        }
-        catch (error) {
-            console.log(error);
-            setAuth({ username: "", loaded: true })
-        }
-
-    };
+    const [error, setError] = useState("")
+    const [info, setInfo] = useState("")
 
     useEffect(() => {
         getUser();
@@ -30,18 +21,17 @@ export default function Login() {
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        if (username === "" || password === "") return setInfo('Please enter all fields')
+
         setProcessing(true)
         try {
-            const res = await axios.post(
-                'http://localhost:5000/api/auth/login',
-                { username, password }
-            );
-            getUser()
+            await axios.post('http://localhost:5000/api/auth/login', { username, password });
+            if (! await getUser()) setError('Wrong username or password')
+            setProcessing(false)
         } catch (err) {
-            console.log(err);
+            setError(err.response.data)
         }
         setProcessing(false)
-
     };
 
     const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,7 +39,15 @@ export default function Login() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const { username, password } = formData;
+    const getUser = async () => {
+        try {
+            const user = await axios.get('http://localhost:5000/api/auth/user');
+            setAuth({ username: JSON.stringify(user.data), loaded: true })
+        } catch (_) {
+            setAuth({ username: "", loaded: true })
+            return false
+        }
+    };
 
 
     if (auth.loaded && auth.username) {
@@ -63,13 +61,12 @@ export default function Login() {
             <form onSubmit={(e) => onSubmit(e)}>
                 <div className="form-group">
                     <label>Username</label>
-
                     <input
                         type="text"
                         className="form-control"
                         name="username"
                         placeholder="Enter username"
-                        value={username}
+                        value={formData.username}
                         onChange={(e) => onChange(e)}
                     />
                 </div>
@@ -80,20 +77,25 @@ export default function Login() {
                         className="form-control"
                         name="password"
                         placeholder="Password"
-                        value={password}
+                        value={formData.password}
                         onChange={(e) => onChange(e)}
                     />
                 </div>
-
                 <button type="submit" className="btn btn-outline-danger">
                     Submit
                 </button>
             </form>
+
+            {error !== "" && <div className="error-text"> {error} </div>}
+
+            {info !== "" && <div className="info-text"> {info} </div>}
+
             <div className="link">
                 <p>
                     Don't have an account? <Link to="/register">Register</Link>
                 </p>
             </div>
+
             {processing &&
                 <div>
                     <div className="spinner">
@@ -104,9 +106,6 @@ export default function Login() {
                 </div>
             }
 
-            <p>{auth.username}</p>
         </div>
-
-
     );
 }

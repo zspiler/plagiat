@@ -225,3 +225,15 @@ body {
     text-align: center;
     vertical-align: middle;
 }
+
+.error-text {
+    margin-top: 15px;
+    font-style: italic;
+    color: rgb(230, 84, 84);
+}
+
+.info-text {
+    margin-top: 15px;
+    font-style: italic;
+    color: rgb(3, 147, 225);
+}

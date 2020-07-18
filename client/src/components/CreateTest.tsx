@@ -8,17 +8,18 @@ import axios from 'axios'
 
 
 export default function CreateEvent(): ReactElement {
-
     const [auth, setAuth] = useState({ username: "", loaded: false })
     const [formData, setFormData] = useState({ title: '', description: '', language: 'c', date: new Date().toLocaleDateString(), files: [] as any, baseFiles: [] as any });
 
     const [processing, setProcessing] = useState(false)
     const [uploading, setUploading] = useState(false)
     const [progress, setProgess] = useState(0);
-    const [testID, setTestID] = useState("")
+
+    const [error, setError] = useState("")
 
     const [files, setFiles] = useState([] as any)
     const [baseFiles, setBaseFiles] = useState([] as any)
+    const [testID, setTestID] = useState("")
 
     const { title, description, language } = formData;
     const el = React.useRef<HTMLInputElement>(null);
@@ -34,14 +35,11 @@ export default function CreateEvent(): ReactElement {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-
     const getUser = async () => {
         try {
             const user = await axios.get('http://localhost:5000/api/auth/user');
-            setAuth({ username: user.data, loaded: true })
-        }
-        catch (error) {
-            console.log(error);
+            setAuth({ username: user.data.username, loaded: true })
+        } catch (_) {
             setAuth({ username: "", loaded: true })
         }
     };
@@ -49,11 +47,13 @@ export default function CreateEvent(): ReactElement {
 
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
         if (uploading || processing) return;
 
-        if (files.length + baseFiles.length === 0) { console.log('No files selected!'); return }
+        if (files.length < 2) return setError('Please select at least 2 files to compare');
 
-        // Upload files
+        // Add files
+
         for (const file of files) {
             formData.files.push(file.name)
         }
@@ -72,6 +72,8 @@ export default function CreateEvent(): ReactElement {
             fd.append(`file ${i}`, files[i]);
         }
 
+        // Upload files
+
         setUploading(true)
         let res = await axios.post(`http://localhost:5000/api/tests/`, fd, {
             headers: {
@@ -79,7 +81,7 @@ export default function CreateEvent(): ReactElement {
             },
             onUploadProgress: (progressEvent) => {
                 var pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-                if (pct == 100) {
+                if (pct === 100) {
                     setUploading(false)
                     setProcessing(true)
                 }
@@ -88,7 +90,6 @@ export default function CreateEvent(): ReactElement {
             }
         })
         setTestID(res.data)
-        console.log(`Moss response: ${JSON.stringify(res)}`);
     };
 
 
@@ -96,7 +97,7 @@ export default function CreateEvent(): ReactElement {
         let arr: File[] = []
         for (var i = 0; i < e.target.files.length; i++) {
             for (const file of files) {
-                if (file.name == e.target.files[i].name) { // TODO: display error
+                if (file.name === e.target.files[i].name) {
                     return console.log('Please make sure all uploaded files have unique names.');
                 }
             }
@@ -113,13 +114,8 @@ export default function CreateEvent(): ReactElement {
         setBaseFiles(baseFiles.concat(arr))
     }
 
-    if (auth.loaded && !auth.username) {
-        return <Redirect to="/" />;
-    }
-
-    if (testID != "") {
-        return <Redirect to={`/tests/${testID}`} />
-    }
+    if (auth.loaded && !auth.username) return <Redirect to="/" />;
+    if (testID !== "") return <Redirect to={`/tests/${testID}`} />
 
     return (
         <div>
@@ -194,9 +190,11 @@ export default function CreateEvent(): ReactElement {
                             </label>
 
                             <label className={`btn btn-outline-danger`}>
-                                Submit
-                                <input type="submit" hidden />
+                                Submit <input type="submit" hidden />
                             </label>
+
+                            {error !== "" && <div className="error-text"> {error} </div>}
+
                         </div>
 
                     </form>

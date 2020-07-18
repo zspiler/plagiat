@@ -6,7 +6,7 @@ import Navbar from './layout/Navbar';
 import TestCard from './TestCard'
 
 
-export default function Homepage(): ReactElement {
+export default function Home(): ReactElement {
 
     const [auth, setAuth] = useState({ username: "", loaded: false })
     const [loading, setLoading] = useState(true)
@@ -20,10 +20,8 @@ export default function Homepage(): ReactElement {
     const getUser = async () => {
         try {
             const user = await axios.get('http://localhost:5000/api/auth/user');
-            setAuth({ username: user.data, loaded: true })
-        }
-        catch (error) {
-            console.log(error);
+            setAuth({ username: user.data.username, loaded: true })
+        } catch (_) {
             setAuth({ username: "", loaded: true })
         }
     };
@@ -32,17 +30,14 @@ export default function Homepage(): ReactElement {
         try {
             const res = await axios.get('http://localhost:5000/api/tests/');
             setTests(res.data.reverse())
-        }
-        catch (error) {
-            console.log(error);
+        } catch (err) {
+            console.log(err);
         }
         setLoading(false)
     };
 
 
-    if (auth.loaded && !auth.username) {
-        return <Redirect to="/" />;
-    }
+    if (auth.loaded && !auth.username) return <Redirect to="/" />;
 
     return (
         <div>
@@ -54,27 +49,28 @@ export default function Homepage(): ReactElement {
                         New test
                     </button>
                 </Link>
-                {loading &&
-                    <div className="link">
-                        <div className="spinner">
-                            <div className="bounce1"></div>
-                            <div className="bounce2"></div>
-                            <div className="bounce3"></div>
+                {loading ?
+                    (
+                        <div className="link">
+                            <div className="spinner">
+                                <div className="bounce1"></div>
+                                <div className="bounce2"></div>
+                                <div className="bounce3"></div>
+                            </div>
                         </div>
-                    </div>
+                    )
+                    :
+                    (
+                        tests.map((test: any) => {
+                            return <TestCard key={test._id}
+                                id={test._id}
+                                title={test.title}
+                                language={test.language}
+                                date={test.date}
+                            />
+                        })
+                    )
                 }
-
-                {!loading &&
-                    tests.map((test: any) => {
-                        return <TestCard key={test._id}
-                            id={test._id}
-                            title={test.title}
-                            language={test.language}
-                            date={test.date}
-                        />
-                    })
-                }
-
             </div>
         </div>
     )

@@ -5,14 +5,9 @@ import Navbar from './layout/Navbar';
 import axios from 'axios'
 
 
-// export default function Test({ match }: Props): ReactElement {
-//     const history = useHistory()
-
-
 export default function NotFound(): ReactElement {
 
     const [auth, setAuth] = useState({ username: "", loaded: false })
-    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         getUser()
@@ -22,9 +17,7 @@ export default function NotFound(): ReactElement {
         try {
             const user = await axios.get('http://localhost:5000/api/auth/user');
             setAuth({ username: user.data, loaded: true })
-        }
-        catch (error) {
-            console.log(error);
+        } catch (_) {
             setAuth({ username: "", loaded: true })
         }
     };

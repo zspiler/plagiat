@@ -1,58 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, Redirect } from 'react-router-dom';
 import axios from 'axios';
 
 export default function Register() {
 
     const [formData, setFormData] = useState({ username: '', password: '', password2: '', });
+    const { username, password, password2 } = formData;
+
     const [auth, setAuth] = useState({ username: "", loaded: false })
+
     const [processing, setProcessing] = useState(false)
 
-    useEffect(() => {
-        getUser();
-    }, []);
+    const [error, setError] = useState("")
 
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        if (username === "" || password === "" || password2 === "") return setError('Please enter all fields')
+        if (password !== password2) return setError("Passwords don't match")
+        if (password.length < 6) return setError("Password must be at least 6 characters long")
+
         setProcessing(true)
         try {
-            const res = await axios.post(
+            const user = await axios.post(
                 'http://localhost:5000/api/auth/register',
                 { username, password }
             );
-            getUser()
+            setAuth({ username: JSON.stringify(user.data.username), loaded: true })
         } catch (err) {
-            const errors = err.response.data.errors;
-            if (errors) {
-                console.log(errors);
-            }
+            setError(err.response.data)
         }
         setProcessing(false)
-
-        console.log('submit');
     };
-
-    const getUser = async () => {
-        try {
-            const user = await axios.get(
-                'http://localhost:5000/api/auth/user'
-            );
-            setAuth({ username: JSON.stringify(user.data), loaded: true })
-        }
-        catch (error) {
-            console.log(error);
-            setAuth({ username: "", loaded: true })
-        }
-    };
-
 
     const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         e.preventDefault();
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
-
-    const { username, password, password2 } = formData;
 
     if (auth.loaded && auth.username) {
         return <Redirect to="/home" />;
@@ -98,11 +82,13 @@ export default function Register() {
                         onChange={(e) => onChange(e)}
                     />
                 </div>
-
                 <button type="submit" className="btn btn-outline-danger">
                     Submit
                 </button>
             </form>
+
+
+            {error !== "" && <div className="error-text"> {error} </div>}
 
             <div className="link">
                 <p>

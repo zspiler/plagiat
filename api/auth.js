@@ -4,12 +4,13 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 
+
 // GET api/auth/user
 // Get user
 
 router.get('/user', async (req, res) => {
-    if (req.user) res.send(req.user.username)
-    else res.status(401).json('Unauthorized');
+    if (req.user) res.json(req.user)
+    else res.status(401).send('Unauthorized');
 });
 
 // POST api/auth/register
@@ -17,10 +18,15 @@ router.get('/user', async (req, res) => {
 
 router.post('/register', async (req, res) => {
     const { username, password } = req.body;
+
+    // Validate form
+    if (password.length < 6) {
+        return res.status(400).send("Password must be at least 6 characters long")
+    }
+
     User.findOne({ username: username }, async (err, doc) => {
-        if (err) console.log(err);
-        if (doc) res.send('User exists! Please choose a different username.');
-        // handle error etc etc
+        if (err) res.status(500).send('Server error.');
+        if (doc) res.status(401).send('Username already taken.');
         else {
             const user = new User({
                 username,
@@ -31,34 +37,32 @@ router.post('/register', async (req, res) => {
 
             req.logIn(user, (err) => {
                 if (err) {
-                    console.log(`Login error: ${err}`);
-                    throw err;
+                    return res.status(401).send('Error logging in.');
                 }
-                res.send('User created!');
+                res.json(user)
             });
         }
     });
 });
 
 // POST api/auth/login
-// Login
+// Log In
 
 router.post('/login', async (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
-        if (err) throw err;
-        if (!user) res.send('No User Exists');
+    passport.authenticate('local', (err, user, _) => {
+        if (err) res.status(401).send('Unauthorized');
+        if (!user) res.status(401).send('User does not exist');
         else {
             req.logIn(user, (err) => {
-                if (err) throw err;
-                res.send('Successfully Authenticated');
-                console.log(`${req.user.username} logged in.`);
+                if (err) res.status(401).send('Error logging in');;
+                res.send(`${req.user.username} logged in`);
             });
         }
     })(req, res, next);
 });
 
 // GET api/auth/logout
-// Logout
+// Log Out
 
 router.get('/logout', function (req, res) {
     req.logout();

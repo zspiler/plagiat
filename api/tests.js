@@ -4,15 +4,11 @@ const Test = require('../models/Test');
 const fs = require('fs-extra')
 const MossClient = require('moss-node-client')
 const parseResult = require('../utils/parseResult');
-// const { default: Axios } = require('axios');
 
 
 const authenticate = (req, res, next) => {
-    if (req.isAuthenticated()) {
-        return next();
-    } else {
-        return res.send(401);
-    }
+    if (req.isAuthenticated()) return next();
+    else return res.status(401).send('Unauthorized');
 }
 
 
@@ -20,9 +16,7 @@ const authenticate = (req, res, next) => {
 // Get logged-in user's tests
 
 router.get('/', authenticate, async (req, res) => {
-    const username = req.user.username
-
-    User.findOne({ username: username }, async (err, user) => {
+    User.findOne({ username: req.user.username }, async (err, user) => {
         if (err) console.log(err);
         if (user) {
             var tests = await Test.find().where('_id').in(user.tests).exec();
@@ -33,32 +27,28 @@ router.get('/', authenticate, async (req, res) => {
 
 
 // GET api/tests/:testID
-// Get a test (protected)
+// Get a test 
 
 router.get('/:testID', authenticate, async (req, res) => {
     const testID = req.params.testID
     const user = await User.findOne({ username: req.user.username })
-    if (!user.tests.includes(testID)) res.status(401).send('Unauthorized');
+    if (!user.tests.includes(testID)) res.status(403).send('Unauthorized Access');
 
     const test = await Test.findById(testID).exec()
     res.send(test)
 })
 
+
 // DELETE api/tests/:testID
-// Delete a test (protected)
+// Delete a test 
 
 router.delete('/:testID', authenticate, async (req, res) => {
-    console.log(`delete`);
-    const testID = req.params.testID
     const user = await User.findOne({ username: req.user.username })
-    if (!user.tests.includes(testID)) res.status(401).send('Unauthorized');
+    if (!user.tests.includes(req.params.testID)) res.status(403).send('Unauthorized Access');
 
-    console.log(`Deleting test with _id: ${testID}`);
     Test.deleteOne({ _id: req.params.testID }, (err) => {
-        if (err) {
-            res.send('F')
-        }
-        res.send('Success!')
+        if (err) res.status(500).send('Server Error')
+        else res.send('Deleted test')
     });
 })
 
@@ -67,19 +57,13 @@ router.delete('/:testID', authenticate, async (req, res) => {
 // Create new test
 
 router.post('/', authenticate, async (req, res) => {
-    const { title, description, language, date, files, baseFiles } = JSON.parse(req.body.form)
 
-    // Create and save test
-    const test = new Test({
-        title: title, description: description, language: language, date: date,
-        files: files, baseFiles: baseFiles
-    })
+    const test = new Test(JSON.parse(req.body.form))
 
     // Add test to user
     User.findOne({ username: req.user.username }, async (err, user) => {
         if (err) {
-            console.log(err);
-            throw err;
+            res.status(500).send('Server Error')
         }
         else {
             user.tests.push(test._id)
@@ -95,14 +79,14 @@ router.post('/', authenticate, async (req, res) => {
     if (!fs.existsSync(filesDir)) fs.mkdirSync(filesDir, { recursive: true });
     if (!fs.existsSync(baseFilesDir)) fs.mkdirSync(baseFilesDir, { recursive: true });
 
-    // Move files
+    // Move files to dirs
     for (var key in req.files) {
         const file = req.files[key]
-        var dir = (key.indexOf('base') == 0 ? baseFilesDir : filesDir)
+        var dir = (key.indexOf('base') === 0 ? baseFilesDir : filesDir)
         await file.mv(`${dir}/${file.name}`);
     }
 
-    const moss = new MossClient(language, "113025430")
+    const moss = new MossClient(JSON.parse(req.body.form).language, "113025430")
 
     fs.readdirSync(filesDir).forEach(function (file) {
         moss.addFile(`${filesDir}/${file}`, file)
@@ -112,14 +96,13 @@ router.post('/', authenticate, async (req, res) => {
         moss.addFile(`${baseFilesDir}/${file}`, file)
     });
 
-    // Submit to moss
+    // Submit files to Moss 
     moss.process().then(url => {
         const results = parseResult(url)
 
         results.forEach(pair => {
             test.results.push(pair)
         })
-        console.log(`test with results: ${JSON.stringify(test)}`);
         test.save()
 
         res.send(test._id)

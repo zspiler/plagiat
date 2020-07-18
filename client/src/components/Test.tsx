@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ReactElement } from 'react';
 import axios from 'axios'
-import { Link, Redirect } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 import { useHistory } from "react-router-dom";
 
 import Navbar from './layout/Navbar';
@@ -15,7 +15,6 @@ interface Result {
     linesMatched: number
 }
 
-
 interface Props {
     match: any
 }
@@ -29,7 +28,6 @@ export default function Test({ match }: Props): ReactElement {
     const [results, setResults] = useState<Result[]>([])
     const [elements, setElements] = useState<any[]>([])
 
-
     useEffect(() => {
         getUser()
         getTest();
@@ -37,15 +35,9 @@ export default function Test({ match }: Props): ReactElement {
 
     const getUser = async () => {
         try {
-            console.log(`loading user...`);
-
             const user = await axios.get('http://localhost:5000/api/auth/user');
-            console.log(`got user.`);
-
-            setAuth({ username: user.data, loaded: true })
-        }
-        catch (error) {
-            console.log(error);
+            setAuth({ username: user.data.username, loaded: true })
+        } catch (_) {
             setAuth({ username: "", loaded: true })
         }
     };
@@ -57,23 +49,25 @@ export default function Test({ match }: Props): ReactElement {
             setTest(res.data)
             setResults(res.data.results)
 
-            let arr = []
-            for (var i = 0; i < res.data.files.length; i++) {
-                arr.push({ data: { id: res.data.files[i], label: res.data.files[i] }, css: { color: `rgb(240,240,240)` } });
+            // Set data for graph
+            if (results.length > 0) {
+                let arr = []
+                for (var i = 0; i < res.data.files.length; i++) {
+                    arr.push({ data: { id: res.data.files[i], label: res.data.files[i] }, css: { color: `rgb(240,240,240)` } });
+                }
+                for (var i = 0; i < res.data.results.length; i++) {
+                    const pair = res.data.results[i]
+                    const red = (255 * ((pair.file1Percentage + pair.file2Percentage) / 200))
+                    arr.push({
+                        data: { source: pair.file1, target: pair.file2 }, style: {
+                            lineColor: `rgb(${red},0,0)`
+                        }
+                    });
+                }
+                setElements(arr)
             }
-            for (var i = 0; i < res.data.results.length; i++) {
-                const pair = res.data.results[i]
-                const red = (255 * ((pair.file1Percentage + pair.file2Percentage) / 200))
-                arr.push({
-                    data: { source: pair.file1, target: pair.file2 }, style: {
-                        lineColor: `rgb(${red},0,0)`
-                    }
-                });
-            }
-            setElements(arr)
-        }
-        catch (error) {
-            console.log(error);
+        } catch (err) {
+            console.log(err);
         }
 
         setLoading(false)
@@ -82,17 +76,15 @@ export default function Test({ match }: Props): ReactElement {
     const deleteTest = async () => {
         try {
             await axios.delete(`http://localhost:5000/api/tests/${match.params.testID}`);
+            history.push('/home')
+        } catch (err) {
+            alert(err.response.data)
         }
-        catch (error) {
-            console.log(error);
-        }
-        history.push('/home')
     }
 
 
-    if (auth.loaded && !auth.username) {
-        return <Redirect to="/" />;
-    }
+    if (auth.loaded && !auth.username) return <Redirect to="/" />;
+    if (!loading && !test.files) return <Redirect to="/NotFound" />
 
     return (
         <div>
@@ -163,7 +155,7 @@ export default function Test({ match }: Props): ReactElement {
                                         })}
                                     </tbody>
                                 </table>
-                            ) || (<h5 style={{ color: `rgb(64, 173, 65)` }}>No similarities found!</h5>)}
+                            ) || (<h5 style={{ color: `rgb(0, 190, 100)` }}>No similarities found!</h5>)}
 
 
                         </div>
