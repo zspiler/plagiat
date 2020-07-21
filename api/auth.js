@@ -13,6 +13,8 @@ router.get('/user', async (req, res) => {
     else res.status(401).send('Unauthorized');
 });
 
+
+
 // POST api/auth/register
 // Register user
 

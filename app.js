@@ -7,6 +7,7 @@ const cors = require('cors');
 const fileUpload = require('express-fileupload');
 
 const configurePassport = require('./utils/configurePassport');
+const config = require('config')
 
 // Connect to database
 require('./utils/db')();
@@ -16,13 +17,9 @@ const port = process.env.PORT || 5000
 app.listen(port, () => console.log(`Listening on port ${port}...`));
 
 // Auth 
-app.use(
-    cors({ origin: 'http://localhost:3000', credentials: true, })
-);
-app.use(
-    session({ secret: 'secret..', resave: true, saveUninitialized: true, })
-);
-app.use(cookieParser('secret..'));
+app.use(cors({ origin: 'http://localhost:3000', credentials: true, }));
+app.use(session({ secret: config.get('secret'), resave: true, saveUninitialized: true, }));
+app.use(cookieParser(config.get('secret')));
 app.use(express.json({ extended: false }));
 
 app.use(passport.initialize());

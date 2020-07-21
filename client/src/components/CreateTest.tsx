@@ -8,6 +8,7 @@ import axios from 'axios'
 
 
 export default function CreateEvent(): ReactElement {
+
     const [auth, setAuth] = useState({ username: "", loaded: false })
     const [formData, setFormData] = useState({ title: '', description: '', language: 'c', date: new Date().toLocaleDateString(), files: [] as any, baseFiles: [] as any });
 
@@ -72,10 +73,13 @@ export default function CreateEvent(): ReactElement {
             fd.append(`file ${i}`, files[i]);
         }
 
+
         // Upload files
 
         setUploading(true)
-        let res = await axios.post(`http://localhost:5000/api/tests/`, fd, {
+
+        axios.post(`http://localhost:5000/api/tests/`,
+            fd, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             },
@@ -86,10 +90,15 @@ export default function CreateEvent(): ReactElement {
                     setProcessing(true)
                 }
                 setProgess(pct);
-
             }
-        })
-        setTestID(res.data)
+        }).then(function (res) {
+            setTestID(res.data)
+            setUploading(false)
+        }).catch(function (err) {
+            setError(err.response.data)
+            setUploading(false)
+            setProcessing(false)
+        });
     };
 
 

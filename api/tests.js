@@ -58,6 +58,7 @@ router.delete('/:testID', authenticate, async (req, res) => {
 
 router.post('/', authenticate, async (req, res) => {
 
+    console.log(`/api/tests `);
     const test = new Test(JSON.parse(req.body.form))
 
     // Add test to user
@@ -110,6 +111,8 @@ router.post('/', authenticate, async (req, res) => {
         fs.remove(`${testDir}`, () => {
             return
         })
+    }).catch(err => {
+        res.status(500).send('Server Error - Cannot connect to Moss servers.')
     })
 });
 

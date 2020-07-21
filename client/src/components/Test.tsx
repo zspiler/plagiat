@@ -50,7 +50,7 @@ export default function Test({ match }: Props): ReactElement {
             setResults(res.data.results)
 
             // Set data for graph
-            if (results.length > 0) {
+            if (res.data.results.length > 0) {
                 let arr = []
                 for (var i = 0; i < res.data.files.length; i++) {
                     arr.push({ data: { id: res.data.files[i], label: res.data.files[i] }, css: { color: `rgb(240,240,240)` } });
@@ -64,6 +64,7 @@ export default function Test({ match }: Props): ReactElement {
                         }
                     });
                 }
+
                 setElements(arr)
             }
         } catch (err) {
@@ -162,6 +163,7 @@ export default function Test({ match }: Props): ReactElement {
                     </div>
 
                     {results.length > 0 &&
+
                         <div className="graph-container">
                             <CytoscapeComponent elements={elements} zoomingEnabled={false}
                                 style={{

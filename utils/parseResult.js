@@ -1,6 +1,10 @@
 const cheerio = require('cheerio');
 const request = require('sync-request');
 
+for (var i = 0; i < 10; i++) {
+    console.log(i);
+}
+
 module.exports = function (url) {
     try {
         let res = request('GET', url);
