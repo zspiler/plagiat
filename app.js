@@ -33,3 +33,11 @@ app.get('/', (req, res) => res.send('Hello World!'));
 app.use('/api/auth', require('./api/auth'));
 app.use('/api/tests', require('./api/tests'));
 
+
+if (process.env.NODE_ENV == 'production') {
+    app.use(express.static('client/build'));
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+    });
+}
+
