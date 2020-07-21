@@ -1,0 +1,4 @@
+{
+	"mongoURI": "mongodb+srv://zan:xdpl24bb@cluster0.sqsgs.mongodb.net/<dbname>?retryWrites=true&w=majority",
+	"secret": "JohnnyCashAtFolsomPrison"
+}
