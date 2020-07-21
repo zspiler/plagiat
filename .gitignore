@@ -3,5 +3,6 @@ node_modules/
 uploads/
 
 
-# config/default.json
-
+# dev
+config/
+client/build/
