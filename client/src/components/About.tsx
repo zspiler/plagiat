@@ -15,7 +15,7 @@ export default function About(): ReactElement {
 
     const getUser = async () => {
         try {
-            const user = await axios.get('http://localhost:5000/api/auth/user');
+            const user = await axios.get('/api/auth/user');
             setAuth({ username: user.data.username, loaded: true })
         }
         catch (error) {

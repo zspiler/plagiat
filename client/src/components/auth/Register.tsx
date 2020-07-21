@@ -23,7 +23,7 @@ export default function Register() {
         setProcessing(true)
         try {
             const user = await axios.post(
-                'http://localhost:5000/api/auth/register',
+                '/api/auth/register',
                 { username, password }
             );
             setAuth({ username: JSON.stringify(user.data.username), loaded: true })
@@ -65,7 +65,7 @@ export default function Register() {
                         type="password"
                         className="form-control"
                         name="password"
-                        placeholder="Password"
+                        placeholder="Enter password"
                         value={password}
                         onChange={(e) => onChange(e)}
                     />
@@ -77,7 +77,7 @@ export default function Register() {
                         type="password"
                         className="form-control"
                         name="password2"
-                        placeholder="Password"
+                        placeholder="Confirm password"
                         value={password2}
                         onChange={(e) => onChange(e)}
                     />

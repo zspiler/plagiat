@@ -35,7 +35,7 @@ export default function Test({ match }: Props): ReactElement {
 
     const getUser = async () => {
         try {
-            const user = await axios.get('http://localhost:5000/api/auth/user');
+            const user = await axios.get('/api/auth/user');
             setAuth({ username: user.data.username, loaded: true })
         } catch (_) {
             setAuth({ username: "", loaded: true })
@@ -45,7 +45,7 @@ export default function Test({ match }: Props): ReactElement {
 
     const getTest = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/tests/${match.params.testID}`)
+            const res = await axios.get(`/api/tests/${match.params.testID}`)
             setTest(res.data)
             setResults(res.data.results)
 
@@ -76,7 +76,7 @@ export default function Test({ match }: Props): ReactElement {
 
     const deleteTest = async () => {
         try {
-            await axios.delete(`http://localhost:5000/api/tests/${match.params.testID}`);
+            await axios.delete(`/api/tests/${match.params.testID}`);
             history.push('/home')
         } catch (err) {
             alert(err.response.data)

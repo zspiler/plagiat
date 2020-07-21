@@ -25,7 +25,7 @@ export default function Login() {
 
         setProcessing(true)
         try {
-            await axios.post('http://localhost:5000/api/auth/login', { username, password });
+            await axios.post('/api/auth/login', { username, password });
             if (! await getUser()) setError('Wrong username or password')
             setProcessing(false)
         } catch (err) {
@@ -41,7 +41,7 @@ export default function Login() {
 
     const getUser = async () => {
         try {
-            const user = await axios.get('http://localhost:5000/api/auth/user');
+            const user = await axios.get('/api/auth/user');
             setAuth({ username: JSON.stringify(user.data), loaded: true })
         } catch (_) {
             setAuth({ username: "", loaded: true })
@@ -76,7 +76,7 @@ export default function Login() {
                         type="password"
                         className="form-control"
                         name="password"
-                        placeholder="Password"
+                        placeholder="Enter password"
                         value={formData.password}
                         onChange={(e) => onChange(e)}
                     />

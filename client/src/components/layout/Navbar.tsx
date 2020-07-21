@@ -12,7 +12,7 @@ export default function Navbar({ username }: Props): ReactElement {
     const history = useHistory();
 
     const logout = async () => {
-        await axios.get('http://localhost:5000/api/auth/logout')
+        await axios.get('/api/auth/logout')
         history.push('/')
     }
 

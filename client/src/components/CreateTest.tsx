@@ -38,7 +38,7 @@ export default function CreateEvent(): ReactElement {
 
     const getUser = async () => {
         try {
-            const user = await axios.get('http://localhost:5000/api/auth/user');
+            const user = await axios.get('/api/auth/user');
             setAuth({ username: user.data.username, loaded: true })
         } catch (_) {
             setAuth({ username: "", loaded: true })
@@ -78,7 +78,7 @@ export default function CreateEvent(): ReactElement {
 
         setUploading(true)
 
-        axios.post(`http://localhost:5000/api/tests/`,
+        axios.post(`/api/tests/`,
             fd, {
             headers: {
                 'Content-Type': 'multipart/form-data'

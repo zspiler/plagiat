@@ -19,7 +19,7 @@ export default function Home(): ReactElement {
 
     const getUser = async () => {
         try {
-            const user = await axios.get('http://localhost:5000/api/auth/user');
+            const user = await axios.get('/api/auth/user');
             setAuth({ username: user.data.username, loaded: true })
         } catch (_) {
             setAuth({ username: "", loaded: true })
@@ -28,7 +28,7 @@ export default function Home(): ReactElement {
 
     const getTests = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/tests/');
+            const res = await axios.get('/api/tests/');
             setTests(res.data.reverse())
         } catch (err) {
             console.log(err);
